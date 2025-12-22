@@ -16,7 +16,7 @@
 │   └── run.sh                              // 编译运行算子脚本
 ```
 ## 代码实现介绍
-本样例中实现的是[m, n, k]固定为[64, 64, 64]的matmul算子。
+本样例中实现的是[m, n, k]固定为[16, 16, 16]的matmul算子。
 - kernel实现  
   Matmul算子的数学表达式为：
   ```
@@ -38,7 +38,7 @@
 
     ```bash
     bash run.sh -r [RUN_MODE] -v  [SOC_VERSION]
-    bash run.sh -r cpu -v Ascend910B3
+
     ```
     - RUN_MODE：编译方式，可选择CPU调试，NPU仿真，NPU上板。支持参数为[cpu / sim / npu]。
     - SOC_VERSION：昇腾AI处理器型号，如果无法确定具体的[SOC_VERSION]，则在安装昇腾AI处理器的服务器执行npu-smi info命令进行查询，在查询到的“Name”前增加Ascend信息，例如“Name”对应取值为xxxyy，实际配置的[SOC_VERSION]值为Ascendxxxyy。支持以下产品型号：
@@ -47,7 +47,7 @@
 
     示例如下，Ascendxxxyy请替换为实际的AI处理器型号。
     ```bash
-    bash run.sh -r cpu -v Ascendxxxyy
+    bash run.sh -r cpu -v Ascend910B3
     ```
 
 ## 更新说明
