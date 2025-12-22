@@ -4,10 +4,11 @@ dist/
 *.o
 *.log
 
-# 编辑器临时文件
-.vscode/
-*.swp
-*.swo
+ascendc_kernels_bbit
 
-# 操作系统文件
-.DS_Store
+cceprint/
+cmake/
+input/
+npuchk/
+out/
+output/
