@@ -32,9 +32,9 @@ __aicore__ inline void CopyTiling(TCubeTiling *tiling, GM_ADDR tilingGM)
     return;
 }
 
-class W4A4GroupMatmul {
+class Matmul_custom {
 public:
-    __aicore__ inline W4A4GroupMatmul(){};
+    __aicore__ inline Matmul_custom(){};
     __aicore__ inline void Init(GM_ADDR x, GM_ADDR w, GM_ADDR y, const TCubeTiling &tilingMatmul, AscendC::TPipe *pipe);
     __aicore__ inline void Process(GM_ADDR workspace);
  
@@ -75,7 +75,7 @@ public:
 
 
 
-__aicore__ inline void W4A4GroupMatmul::Init(GM_ADDR x, GM_ADDR w, GM_ADDR y,const TCubeTiling &tilingMatmul, AscendC::TPipe *pipe)
+__aicore__ inline void Matmul_custom::Init(GM_ADDR x, GM_ADDR w, GM_ADDR y,const TCubeTiling &tilingMatmul, AscendC::TPipe *pipe)
 {
     this->tilingMatmul = tilingMatmul;
 
@@ -96,7 +96,7 @@ __aicore__ inline void W4A4GroupMatmul::Init(GM_ADDR x, GM_ADDR w, GM_ADDR y,con
     pipe->InitBuffer(yOutQueue_, 1, (tilingMatmul_M * tilingMatmul_N) * sizeof(int32_t));
 
 };
-__aicore__ inline void W4A4GroupMatmul::CopyIn()
+__aicore__ inline void Matmul_custom::CopyIn()
 {
       printf("Testblock CopyIN=====================\n");
         AscendC::LocalTensor<int8_t> xLocal = xInQueue_.AllocTensor<int8_t>();
@@ -115,7 +115,7 @@ __aicore__ inline void W4A4GroupMatmul::CopyIn()
   * @param  pipe: Global memory and sync management TPipe object.
   * @retval None
   */
-__aicore__ inline void W4A4GroupMatmul::Process(GM_ADDR workspace)
+__aicore__ inline void Matmul_custom::Process(GM_ADDR workspace)
 {
   //CopyIn(GLOBAL->LOCAL,GM->VECIN)
   CopyIn();
@@ -199,7 +199,7 @@ __aicore__ inline void W4A4GroupMatmul::Process(GM_ADDR workspace)
   * @param  count: Iterate count(once Iterate, compute baseM * baseN).
   * @retval None
   */
-__aicore__ inline void W4A4GroupMatmul::CopyOut()
+__aicore__ inline void Matmul_custom::CopyOut()
 {
     AscendC::LocalTensor<int32_t> yLocal = yOutQueue_.DeQue<int32_t>();
     AscendC::DataCopy(yGlobal, yLocal, tilingMatmul_M*tilingMatmul_N);
@@ -212,7 +212,7 @@ extern "C" __global__ __aicore__ void matmul_custom(GM_ADDR x, GM_ADDR w,  GM_AD
     AscendC::TPipe pipe;
     TCubeTiling tilingMatmul;
     CopyTiling(&tilingMatmul, tilingGmMatmul);
-    W4A4GroupMatmul op_kernel;
+    Matmul_custom op_kernel;
     op_kernel.Init(x, w, y, tilingMatmul, &pipe);
     // //https://www.hiascend.com/document/detail/zh/canncommercial/82RC1/API/ascendcopapi/atlasascendc_api_07_0628.html
     // //↓
