@@ -8,7 +8,7 @@
 │   ├── scripts
 │   │   ├── verify_result.py                // 真值对比文件--对比你的算子计算结果和py直接算的结果，一般不需要修改
 │   │   └── gen_data.py                     // 输入数据和真值数据生成脚本文件--生成待计算数据和py直接计算的结果，如有需要可以修改
-│   ├── CMakeLists.txt                      // 编译工程文件--保持默认，除非你更改下方的 算子.cpp和 算子_tiling.cpp，则需要修改
+│   ├── CMakeLists.txt                      // 编译工程文件--保持默认，除非你更改下方的 算子.cpp和 算子_tiling.cpp的文件名，则需要对应修改
 │   ├── data_utils.h                        // 数据读入写出函数--保持默认
 │   ├── main.cpp                            // 主函数，调用算子的应用程序，含CPU域及NPU域调用--如要修改，详情见内部注释
 │   ├── matmul_custom_tiling.cpp  // 算子tiling实现--主要编写文件
