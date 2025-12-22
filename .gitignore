@@ -7,7 +7,6 @@ dist/
 ascendc_kernels_bbit
 
 cceprint/
-cmake/
 input/
 npuchk/
 out/

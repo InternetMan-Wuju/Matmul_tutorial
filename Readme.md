@@ -4,19 +4,19 @@
 ## 目录结构介绍
 ```
 ├── MatMal
-│   ├── cmake                               // 编译工程文件
+│   ├── cmake                               // 编译工程文件--保持默认
 │   ├── scripts
-│   │   ├── verify_result.py                // 真值对比文件
-│   │   └── gen_data.py                     // 输入数据和真值数据生成脚本文件
-│   ├── CMakeLists.txt                      // 编译工程文件
-│   ├── data_utils.h                        // 数据读入写出函数
-│   ├── main.cpp                            // 主函数，调用算子的应用程序，含CPU域及NPU域调用
+│   │   ├── verify_result.py                // 真值对比文件--对比你的算子计算结果和py直接算的结果，一般不需要修改
+│   │   └── gen_data.py                     // 输入数据和真值数据生成脚本文件--生成待计算数据和py直接计算的结果，如有需要可以修改
+│   ├── CMakeLists.txt                      // 编译工程文件--保持默认，除非你更改下方的 算子.cpp和 算子_tiling.cpp，则需要修改
+│   ├── data_utils.h                        // 数据读入写出函数--保持默认
+│   ├── main.cpp                            // 主函数，调用算子的应用程序，含CPU域及NPU域调用--如要修改，详情见内部注释
 │   ├── matmul_custom_tiling.cpp  // 算子tiling实现--主要编写文件
 │   ├── matmul_custom.cpp         // 算子kernel实现--主要编写文件
-│   └── run.sh                              // 编译运行算子的脚本
+│   └── run.sh                              // 编译运行算子脚本
 ```
 ## 代码实现介绍
-本样例中实现的是[m, n, k]固定为[64, 64, 74]的matmul算子。
+本样例中实现的是[m, n, k]固定为[64, 64, 64]的matmul算子。
 - kernel实现  
   Matmul算子的数学表达式为：
   ```
