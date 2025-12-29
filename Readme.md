@@ -57,3 +57,4 @@ https://gitee.com/ascend/samples/tree/v1.8-8.3.RC1.alpha002/operator/ascendc/0_i
 | ---------- | ------------ | ------------------------------------------------ |
 | 2025/12/22 | Release |                                                 |
 | 2025/12/27 | MultiCore Release |                                                 |
+| 2025/12/28 | MultiCore Tail(Testing) |                                                 |
