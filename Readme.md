@@ -1,4 +1,5 @@
-## 本教程改编自：https://gitee.com/ascend/samples/tree/v1.8-8.3.RC1.alpha002/operator/ascendc/0_introduction/13_matmulleakyrelu_kernellaunch/MatmulLeakyReluInvocation
+## 本教程改编自：
+https://gitee.com/ascend/samples/tree/v1.8-8.3.RC1.alpha002/operator/ascendc/0_introduction/13_matmulleakyrelu_kernellaunch/MatmulLeakyReluInvocation
 
 
 ## 目录结构介绍
@@ -16,7 +17,8 @@
 │   └── run.sh                              // 编译运行算子脚本
 ```
 ## 代码实现介绍
-本样例中实现的是[m, n, k]固定为[16, 16, 16]的matmul算子。
+单核样例中实现的是[m, n, k]固定为[16, 16, 16]的matmul算子。
+多核样例中实现的是[m, n, k]固定为[32, 32*8, 32]的matmul算子。
 - kernel实现  
   Matmul算子的数学表达式为：
   ```
@@ -54,3 +56,4 @@
 | 时间       | 更新事项     | 注意事项                                         |
 | ---------- | ------------ | ------------------------------------------------ |
 | 2025/12/22 | Release |                                                 |
+| 2025/12/27 | MultiCore Release |                                                 |
