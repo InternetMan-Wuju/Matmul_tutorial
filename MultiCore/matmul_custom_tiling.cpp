@@ -24,10 +24,9 @@ using namespace std;
 void GenerateTilingMatmul(const char *socVersion, uint8_t *tilingBuf)
 {
 
-    //静态定义矩阵大小，且不作切分，一次性运算完成
-    constexpr int32_t M = 16;
-    constexpr int32_t K = 16;
-    constexpr int32_t N = 16;
+    constexpr int32_t M = 32;
+    constexpr int32_t K = 32;
+    constexpr int32_t N = 32;//这里仍然是单核的运算大小。
 
     //左矩阵定义
     TPosition XPosition = TPosition::VECOUT;
@@ -54,8 +53,8 @@ void GenerateTilingMatmul(const char *socVersion, uint8_t *tilingBuf)
     //以下未作太多修改，按自己的定义编写即可
     optiling::TCubeTiling tilingData;
     auto ascendcPlatform = platform_ascendc::PlatformAscendCManager::GetInstance(socVersion);
-    MatmulApiTiling tilingApi(*ascendcPlatform);
-
+    MultiCoreMatmulTiling tilingApi(*ascendcPlatform);//注意这里为MultiCoreMatmulTiling
+    tilingApi.SetDim(8); //假设有8核
     tilingApi.SetAType(XPosition, XFormat, XDtype, isTransX);
     tilingApi.SetBType(WPosition, WFormat, WDtype, isTransW);
     tilingApi.SetCType(MatmulPosition, MatmulFormat, MatmulDtype);

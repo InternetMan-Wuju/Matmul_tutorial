@@ -26,9 +26,9 @@ int32_t main(int32_t argc, char *argv[])
 
 
     //定义矩阵大小，注意各个文件保持一致
-    int32_t M = 16;
-    int32_t K = 16;
-    int32_t N = 16;
+    int32_t M = 32;
+    int32_t K = 32;
+    int32_t N = 32*8;//假设有8核,每核计算32列
 
     //
     size_t userWorkspaceSize = 0;
@@ -54,7 +54,8 @@ int32_t main(int32_t argc, char *argv[])
 #ifdef CUSTOM_ASCEND310P//NOTUSE
     uint32_t blockDim = 2;
 #else
-    uint32_t blockDim = 1;
+    uint32_t blockDim = 8;
+    //uint32_t blockDim = 8;//假设有8核
 #endif
 
 //uint32_t blockDim = 1;

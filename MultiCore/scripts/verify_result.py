@@ -18,8 +18,8 @@ error_tol = 1e-4
 
 
 def verify_result(output, golden):
-    output = np.fromfile(output, dtype=np.float16).reshape(-1)
-    golden = np.fromfile(golden, dtype=np.float16).reshape(-1)
+    output = np.fromfile(output, dtype=np.int32).reshape(-1)
+    golden = np.fromfile(golden, dtype=np.int32).reshape(-1)
     different_element_results = np.isclose(output,
                                            golden,
                                            rtol=relative_tol,
@@ -31,7 +31,7 @@ def verify_result(output, golden):
         golden_data = golden[real_index]
         output_data = output[real_index]
         print(
-            "data index: %06d, expected: %-.9f, actual: %-.9f, rdiff: %-.6f" %
+            "data index: %06d, expected: %d, actual: %d, rdiff: %d" %
             (real_index, golden_data, output_data,
              abs(output_data - golden_data) / golden_data))
         if index == 100:

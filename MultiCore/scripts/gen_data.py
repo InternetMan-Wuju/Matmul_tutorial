@@ -12,14 +12,35 @@ import numpy as np
 import os
 
 def gen_test_data():  
-    M = 16 
-    K = 16 
-    N = 16 
-    input_X = np.random.randint(1, 10, [M, K]).astype(np.int8)
-    input_W = np.random.randint(1, 10, [K, N]).astype(np.int8)
+    M = 32 
+    K = 32 
+    N = 32*8 
+    input_X = np.random.randint(1, 4, [M, K]).astype(np.int8)
+    input_W = np.random.randint(1, 4, [K, N]).astype(np.int8)
+
+    # first_row = input_W[0, :]
+    # print("W 的第一行（shape = {}）：".format(first_row.shape))
+    # print(first_row)
+    # first_column = input_W[:, 0]
+    # print("W 的第一列（shape = {}）：".format(first_column.shape))
+    # print(first_column)
+    #测试用第一分块
+    # first_block = input_W[0:32, 0:32]
+    # print("W 的第一分块（shape = {}）：".format(first_block.shape))
+    # print(first_block)
+    # second_block = input_W[0:32, 32:64]
+    # print("W 的第二分块（shape = {}）：".format(second_block.shape))
+    # print(second_block)
+
     # 计算矩阵  
     Y = Matmul(input_X, input_W)   
-
+    #测试用第一分块
+    # first_block = Y[0:32, 0:32]
+    # print("Y 的第一分块（shape = {}）：".format(first_block.shape))
+    # print(first_block)
+    # second_block = Y[0:32, 32:64]
+    # print("Y 的第二分块（shape = {}）：".format(second_block.shape))
+    # print(second_block)
     # 创建输出文件夹  
     os.makedirs("input", exist_ok=True)  
     os.makedirs("output", exist_ok=True)  
