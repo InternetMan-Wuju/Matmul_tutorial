@@ -158,12 +158,10 @@ __aicore__ inline void Matmul_custom::Process(GM_ADDR workspace)
     //=============================MatMul Cal=================================
     printf("Testblock MatMul Cal Start=====================\n");
 
-    //mmMatmul.SetOrgShape(tilingMatmul.M,tilingMatmul.N,tilingMatmul.Ka);
     mmMatmul.SetTensorA(x_out);
     mmMatmul.SetTensorB(w_out);
     
 
-    //mmMatmul.IterateAll(MatMulIn[sum_line*tilingMatmul.N]);
     while(mmMatmul.Iterate()){ 
       mmMatmul.GetTensorC(y_In);
         };

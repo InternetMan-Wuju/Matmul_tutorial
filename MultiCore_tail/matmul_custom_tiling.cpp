@@ -24,18 +24,15 @@ using namespace std;
 void GenerateTilingMatmul(const char *socVersion, uint8_t *tilingBuf)
 {
 
-    //不作切分，一次性运算完成
-    constexpr int32_t M = 16;
-    constexpr int32_t K = 16;
-    constexpr int32_t N = 16;
+    constexpr int32_t M = 32;
+    constexpr int32_t K = 32;
+    constexpr int32_t N = 32;//这里仍然是单核的运算大小。
 
     //左矩阵定义
-    TPosition XPosition = TPosition::VECOUT;//经过不严谨的测试，输入应该只能用这个
-    CubeFormat XFormat = CubeFormat::ND;//暂未涉及到NZ
-    //有关分型（NZ/ND）还暂未设计，请参考
-    //https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/83RC1alpha002/opdevg/Ascendcopdevg/atlas_ascendc_10_0037.html
-    DataType XDtype = DataType::DT_INT8;//int8
-    bool isTransX = false;//是否转置
+    TPosition XPosition = TPosition::VECOUT;
+    CubeFormat XFormat = CubeFormat::ND;
+    DataType XDtype = DataType::DT_INT8;
+    bool isTransX = false;
 
     //右矩阵定义
     TPosition WPosition = TPosition::VECOUT;
@@ -56,8 +53,8 @@ void GenerateTilingMatmul(const char *socVersion, uint8_t *tilingBuf)
     //以下未作太多修改，按自己的定义编写即可
     optiling::TCubeTiling tilingData;
     auto ascendcPlatform = platform_ascendc::PlatformAscendCManager::GetInstance(socVersion);
-    MatmulApiTiling tilingApi(*ascendcPlatform);
-
+    MultiCoreMatmulTiling tilingApi(*ascendcPlatform);//注意这里为MultiCoreMatmulTiling
+    tilingApi.SetDim(8); //假设有8核
     tilingApi.SetAType(XPosition, XFormat, XDtype, isTransX);
     tilingApi.SetBType(WPosition, WFormat, WDtype, isTransW);
     tilingApi.SetCType(MatmulPosition, MatmulFormat, MatmulDtype);
