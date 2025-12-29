@@ -24,7 +24,7 @@ using namespace std;
 void GenerateTilingMatmul(const char *socVersion, uint8_t *tilingBuf)
 {
 
-    //静态定义矩阵大小，且不作切分，一次性运算完成
+    //不作切分，一次性运算完成
     constexpr int32_t M = 16;
     constexpr int32_t K = 16;
     constexpr int32_t N = 16;

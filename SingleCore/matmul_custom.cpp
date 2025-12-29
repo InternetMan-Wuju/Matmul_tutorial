@@ -13,10 +13,6 @@
 
 using namespace matmul;
 
-
-//此处暂时使用常量表示tiling大小，因为我们不作任何分块操作，一次性计算完成
-constexpr int32_t  tilingMatmul_M=16; constexpr int32_t tilingMatmul_N=16; constexpr int32_t tilingMatmul_K=16;
-
 //Copytiling函数,自带，未作任何改动
 __aicore__ inline void CopyTiling(TCubeTiling *tiling, GM_ADDR tilingGM)
 {
@@ -47,7 +43,6 @@ public:
     AscendC::GlobalTensor<int8_t> wGlobal;
     AscendC::GlobalTensor<int32_t> yGlobal;
 
-    //===========================TWO TILING
     TCubeTiling tilingMatmul;
 
     __aicore__ inline void CopyIn();
@@ -88,21 +83,21 @@ __aicore__ inline void Matmul_custom::Init(GM_ADDR x, GM_ADDR w, GM_ADDR y,const
 {
     this->tilingMatmul = tilingMatmul;
 
-    xGlobal.SetGlobalBuffer((__gm__ int8_t *)x, tilingMatmul_M * tilingMatmul_K);
-    wGlobal.SetGlobalBuffer((__gm__ int8_t *)w, tilingMatmul_K * tilingMatmul_N);
-    yGlobal.SetGlobalBuffer((__gm__ int32_t *)y,  tilingMatmul_M * tilingMatmul_N);
+    xGlobal.SetGlobalBuffer((__gm__ int8_t *)x, tilingMatmul.M * tilingMatmul.Ka);//这里说明一下，tilingMatmul.Ka，为左矩阵的列数，Kb为右矩阵的行数，矩阵乘中这俩当然一样的
+    wGlobal.SetGlobalBuffer((__gm__ int8_t *)w, tilingMatmul.Ka * tilingMatmul.N);
+    yGlobal.SetGlobalBuffer((__gm__ int32_t *)y,  tilingMatmul.M * tilingMatmul.N);
     //====================VECIN
-    pipe->InitBuffer(xInQueue_, 1, (tilingMatmul_M * tilingMatmul_K) * sizeof(int8_t)); 
-    pipe->InitBuffer(wInQueue_, 1, (tilingMatmul_K * tilingMatmul_N) * sizeof(int8_t));
-    pipe->InitBuffer(yInQueue_, 1, (tilingMatmul_M * tilingMatmul_N) * sizeof(int32_t));
+    pipe->InitBuffer(xInQueue_, 1, (tilingMatmul.M * tilingMatmul.Ka) * sizeof(int8_t)); 
+    pipe->InitBuffer(wInQueue_, 1, (tilingMatmul.Ka * tilingMatmul.N) * sizeof(int8_t));
+    pipe->InitBuffer(yInQueue_, 1, (tilingMatmul.M * tilingMatmul.N) * sizeof(int32_t));
     // //====================VECCALC
-    pipe->InitBuffer(xCALC_Buf_,tilingMatmul_K*tilingMatmul_M*sizeof(int8_t));
-    pipe->InitBuffer(wCALC_Buf_,tilingMatmul_K*tilingMatmul_N*sizeof(int8_t));
-    pipe->InitBuffer(y_CALC_Buf_,tilingMatmul_M*tilingMatmul_N*sizeof(int32_t));
+    pipe->InitBuffer(xCALC_Buf_,tilingMatmul.Ka*tilingMatmul.M*sizeof(int8_t));
+    pipe->InitBuffer(wCALC_Buf_,tilingMatmul.Ka*tilingMatmul.N*sizeof(int8_t));
+    pipe->InitBuffer(y_CALC_Buf_,tilingMatmul.M*tilingMatmul.N*sizeof(int32_t));
     // //====================VECOUT
-    pipe->InitBuffer(xOutQueue_, 1, (tilingMatmul_M * tilingMatmul_K) * sizeof(int8_t)); 
-    pipe->InitBuffer(wOutQueue_, 1, (tilingMatmul_K * tilingMatmul_N) * sizeof(int8_t));
-    pipe->InitBuffer(yOutQueue_, 1, (tilingMatmul_M * tilingMatmul_N) * sizeof(int32_t));
+    pipe->InitBuffer(xOutQueue_, 1, (tilingMatmul.M * tilingMatmul.Ka) * sizeof(int8_t)); 
+    pipe->InitBuffer(wOutQueue_, 1, (tilingMatmul.Ka * tilingMatmul.N) * sizeof(int8_t));
+    pipe->InitBuffer(yOutQueue_, 1, (tilingMatmul.M * tilingMatmul.N) * sizeof(int32_t));
 
 };
 //CopyIn函数，将Global的数据搬运到Local,也就是搬运待计算数据
@@ -113,8 +108,8 @@ __aicore__ inline void Matmul_custom::CopyIn()
         AscendC::LocalTensor<int8_t> wLocal = wInQueue_.AllocTensor<int8_t>();
 
         //DataCopy:(目的，源，大小)
-        AscendC::DataCopy(xLocal, xGlobal, tilingMatmul_M * tilingMatmul_K);
-        AscendC::DataCopy(wLocal, wGlobal, tilingMatmul_K * tilingMatmul_N);
+        AscendC::DataCopy(xLocal, xGlobal, tilingMatmul.M * tilingMatmul.Ka);
+        AscendC::DataCopy(wLocal, wGlobal, tilingMatmul.Ka * tilingMatmul.N);
 
         //别忘了入队
         xInQueue_.EnQue(xLocal);
@@ -132,25 +127,21 @@ __aicore__ inline void Matmul_custom::Process(GM_ADDR workspace)
   CopyIn();
   //LOCAL(VECIN) 
   //中间搬运流程
-  //Deque(LOCALTENSOR)
+  //Deque(InQueue)
     AscendC::LocalTensor<int8_t> xLocal = xInQueue_.DeQue<int8_t>();
     AscendC::LocalTensor<int8_t> wLocal = wInQueue_.DeQue<int8_t>();
 
     AscendC::LocalTensor<int32_t> y_In = yInQueue_.AllocTensor<int32_t>();
     AscendC::LocalTensor<int32_t> y_CALC=y_CALC_Buf_.AllocTensor<int32_t>();
     AscendC::LocalTensor<int32_t> yLocal = yOutQueue_.AllocTensor<int32_t>();
-    //FOR RESULT
     
-
-
-
     //VECIN->CALC
     AscendC::LocalTensor<int8_t> x_calc = xCALC_Buf_.AllocTensor<int8_t>();
     AscendC::LocalTensor<int8_t> w_calc = wCALC_Buf_.AllocTensor<int8_t>(); 
 
 
-    AscendC::DataCopy(x_calc,xLocal,tilingMatmul_M*tilingMatmul_K);
-    AscendC::DataCopy(w_calc,wLocal,tilingMatmul_K*tilingMatmul_N);
+    AscendC::DataCopy(x_calc,xLocal,tilingMatmul.M*tilingMatmul.Ka);
+    AscendC::DataCopy(w_calc,wLocal,tilingMatmul.Ka*tilingMatmul.N);
 
     //CALC->VECOUT
 
@@ -158,8 +149,8 @@ __aicore__ inline void Matmul_custom::Process(GM_ADDR workspace)
     AscendC::LocalTensor<int8_t> w_out = wOutQueue_.AllocTensor<int8_t>(); 
 
 
-    AscendC::DataCopy(x_out,x_calc,tilingMatmul_M*tilingMatmul_K);
-    AscendC::DataCopy(w_out,w_calc,tilingMatmul_K*tilingMatmul_N);
+    AscendC::DataCopy(x_out,x_calc,tilingMatmul.M*tilingMatmul.Ka);
+    AscendC::DataCopy(w_out,w_calc,tilingMatmul.Ka*tilingMatmul.N);
 
 
     //=============================COPY OVER============================
@@ -167,12 +158,12 @@ __aicore__ inline void Matmul_custom::Process(GM_ADDR workspace)
     //=============================MatMul Cal=================================
     printf("Testblock MatMul Cal Start=====================\n");
 
-    mmMatmul.SetOrgShape(tilingMatmul_M,tilingMatmul_N,tilingMatmul_K);
+    //mmMatmul.SetOrgShape(tilingMatmul.M,tilingMatmul.N,tilingMatmul.Ka);
     mmMatmul.SetTensorA(x_out);
     mmMatmul.SetTensorB(w_out);
     
 
-    //mmMatmul.IterateAll(MatMulIn[sum_line*tilingMatmul_N]);
+    //mmMatmul.IterateAll(MatMulIn[sum_line*tilingMatmul.N]);
     while(mmMatmul.Iterate()){ 
       mmMatmul.GetTensorC(y_In);
         };
@@ -181,8 +172,8 @@ __aicore__ inline void Matmul_custom::Process(GM_ADDR workspace)
     //AscendC::TBuf<AscendC::TPosition::VECCALC> MatMulCALC_Buf_;// 
     //VECIN->VECCALC
     
-    AscendC::DataCopy(y_CALC,y_In,tilingMatmul_M*tilingMatmul_N);
-    AscendC::DataCopy(yLocal,y_CALC,tilingMatmul_M*tilingMatmul_N);
+    AscendC::DataCopy(y_CALC,y_In,tilingMatmul.M*tilingMatmul.N);
+    AscendC::DataCopy(yLocal,y_CALC,tilingMatmul.M*tilingMatmul.N);
     printf("First Num: %d\n", yLocal(0));//此处作了一个示例，你可以把yLocal，以及其他的Tensor当作数组，但是要注意不能用[]而是()
     yOutQueue_.EnQue<int32_t>(yLocal);
     printf("Testblock MatMul Cal OVER=====================\n");
@@ -210,7 +201,7 @@ __aicore__ inline void Matmul_custom::Process(GM_ADDR workspace)
 __aicore__ inline void Matmul_custom::CopyOut()
 {
     AscendC::LocalTensor<int32_t> yLocal = yOutQueue_.DeQue<int32_t>();
-    AscendC::DataCopy(yGlobal, yLocal, tilingMatmul_M*tilingMatmul_N);
+    AscendC::DataCopy(yGlobal, yLocal, tilingMatmul.M*tilingMatmul.N);
     yOutQueue_.FreeTensor(yLocal);
 
 };
